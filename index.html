@@ -399,13 +399,41 @@ function showQuoteSheet(){
   s+='</tr>';
   for(var i=0;i<11;i++){ s+='<tr></tr>'; }
   s+='</table></body></html>';
-  var blob = new Blob(['\ufeff'+s], {type:'application/vnd.ms-excel'});
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement('a');
-  a.href=url; a.download='智能镜报价表（'+(cfg.name||'未命名')+'）.xls';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
-  toast('报价表已生成');
+
+  var filename='智能镜报价表（'+(cfg.name||'未命名')+'）.xls';
+  var content='\ufeff'+s;
+  // 方式1：IE/旧 Edge 专用
+  if(navigator.msSaveOrOpenBlob){
+    try{ var blob = new Blob([content], {type:'application/vnd.ms-excel'}); navigator.msSaveOrOpenBlob(blob, filename); toast('报价表已生成'); }catch(e){}
+    return;
+  }
+  // 方式2：Blob + a.download（现代浏览器，最可靠）
+  try{
+    var blob2 = new Blob([content], {type:'application/vnd.ms-excel'});
+    var url = URL.createObjectURL(blob2);
+    var a = document.createElement('a');
+    a.href=url; a.download=filename; a.style.display='none';
+    document.body.appendChild(a);
+    setTimeout(function(){
+      try{ a.click(); }catch(e){}
+      setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+    }, 50);
+    toast('报价表已生成');
+    return;
+  }catch(e){}
+  // 方式3：base64 data URL 降级
+  try{
+    var b64 = btoa(unescape(encodeURIComponent(content)));
+    var durl = 'data:application/vnd.ms-excel;charset=utf-8;base64,'+b64;
+    var a2 = document.createElement('a');
+    a2.href=durl; a2.download=filename; a2.style.display='none';
+    document.body.appendChild(a2);
+    a2.click();
+    document.body.removeChild(a2);
+    toast('报价表已生成');
+  }catch(e2){
+    toast('当前浏览器不支持生成，请用外部浏览器打开后再试');
+  }
 }
 
 /* ================= 记录 ================= */
