@@ -118,6 +118,7 @@ nav .ico{font-size:18px;display:block;margin-bottom:1px}
     <div id="detailbox" class="hide"></div>
   </div>
   <div class="btns" style="margin-bottom:14px">
+    <button class="btn sec" id="btnquote">生成报价表</button>
     <button class="btn sec" id="btncopy">复制报价单</button>
     <button class="btn pri" id="btnsave">保存报价</button>
   </div>
@@ -150,7 +151,7 @@ nav .ico{font-size:18px;display:block;margin-bottom:1px}
 /* ================= 默认价格参数（源自成本核算表） ================= */
 var DEF = {
   jg:0.5, mirrorAl:20.5, mirrorAlPlus:22, mirrorSilver:42, mobian:0.35, huajiao:1,
-  led120:0.9, led180:1.2, led240:1.5, ledCob:2.4,
+  led120:0.9, led180:1.2, led240:1.5, ledCob:2.4, led60:0.75,
   paomoKuangYou:0.45, paomoKuangWu:0.68, paomoWu:0.25,
   pensha:7, dabiao:0.25, fengbian:0.2, yixian:0.8, sujiao:1, jiaojiao:1,
   luosi:0.14, gongqianXiao:4, gongqianDa:5, guakouKuang:0.5, guakouWu:1,
@@ -162,7 +163,7 @@ var DEF = {
 };
 var SETDEF_LABELS = [
   ['镜片与加工', [['jg','玻璃加工费(定制切割)'],['mirrorAl','铝镜单价 元/㎡'],['mirrorAlPlus','优质铝镜 元/㎡'],['mirrorSilver','银镜单价 元/㎡'],['mobian','磨边 元/米'],['huajiao','化角 元']]],
-  ['灯带单价 元/米', [['led120','120灯带'],['led180','180灯带'],['led240','240灯带'],['ledCob','COB灯带']]],
+  ['灯带单价 元/米', [['led60','60灯带'],['led120','120灯带'],['led180','180灯带'],['led240','240灯带'],['ledCob','COB灯带']]],
   ['辅料单价', [['paomoKuangYou','泡沫条·有框喷砂 元/米'],['paomoKuangWu','泡沫条·有框不喷砂 元/米'],['paomoWu','泡沫条·无框 元/米'],['pensha','喷砂 元/㎡'],['dabiao','打标 元'],['fengbian','封边油(无框) 元/米'],['yixian','一分二线 元'],['sujiao','热熔玻璃胶 元'],['jiaojiao','外框打胶工费 元'],['luosi','螺丝 元'],['gongqianXiao','工钱·边长<100 元'],['gongqianDa','工钱·边长≥100 元'],['guakouKuang','挂钩·有框 元'],['guakouWu','挂钩·无框 元'],['zhenzhu','珍珠棉(无框) 元'],['dabaodai','打包带 元']]],
   ['包装系数', [['xiangNei','内箱 元/㎡(5包1/3包1)'],['xiangNeiDan','内箱 元/㎡(单包)'],['xiangWai','外箱 元/㎡(5包1)'],['xiangWai3','外箱 元/㎡(3包1)'],['xiangWaiDan','外箱 元/㎡(单包)'],['chewu','除雾膜 元'],['fentTi','分体电源(三键) 元'],['pimoDanjia','泡沫单价 元/m³']]],
   ['开关成本', [['sw_dan','单开三色'],['sw_dan8','单开'],['sw_shuang','双开'],['sw_san','三键'],['sw_leida','双键雷达']]],
@@ -173,7 +174,7 @@ var GROUPS = [
   {key:'sand', label:'表面工艺', opts:[['0','不喷砂'],['1','喷砂']]},
   {key:'mirror', label:'镜片类型', opts:[['al','铝镜'],['alp','优质铝镜'],['ag','银镜']]},
   {key:'cut', label:'定制切割', opts:[['1','需要'],['0','不需要']]},
-  {key:'led', label:'灯带', opts:[['none','无'],['led120','120灯'],['led180','180灯'],['led240','240灯'],['cob','COB']]},
+  {key:'led', label:'灯带', opts:[['none','无'],['led60','60灯'],['led120','120灯'],['led180','180灯'],['led240','240灯'],['cob','COB']]},
   {key:'sw', label:'开关类型', opts:[['none','无'],['dan','单开三色'],['dan8','单开'],['shuang','双开'],['san','三键'],['leida','双键雷达']]},
   {key:'corner', label:'化角', opts:[['0','无'],['1','化角']]},
   {key:'fog', label:'除雾', opts:[['0','无'],['1','加除雾']]},
@@ -181,12 +182,13 @@ var GROUPS = [
   {key:'pack', label:'包装方式', opts:[['5','5包1'],['3','3包1'],['1','单包']]}
 ];
 var FRAMES = [['拼接框',4],['自定义',null]];
-var LEDNAME = {led120:'120灯带', led180:'180灯带', led240:'240灯带', cob:'COB灯带', none:'无灯带'};
+var LEDNAME = {led60:'60灯带', led120:'120灯带', led180:'180灯带', led240:'240灯带', cob:'COB灯带', none:'无灯带'};
 var SWNAME = {dan:'单开三色', dan8:'单开', shuang:'双开', san:'三键', leida:'双键雷达', none:'无开关'};
 
 /* ================= 状态 ================= */
 var settings = load('znj_settings_v1', DEF);
 var cfg = load('znj_cfg_v1', {w:'60',h:'120',t:'2.8',lr:'15',at:'5',framed:'1',sand:'1',mirror:'al',cut:'1',led:'led120',sw:'dan',corner:'0',fog:'0',mark:'0',pack:'5',fr:'4',fs:'0',fm:'0',name:'',note:''});
+cfg.lr='15';
 var lastResult = null, detailOpen = false;
 
 function load(k, d){ try{ var s = localStorage.getItem(k); if(!s) return deepCopy(d); var v = JSON.parse(s); for(var p in d){ if(v[p]===undefined) v[p]=d[p]; } return v; }catch(e){ return deepCopy(d); } }
@@ -215,8 +217,8 @@ function calc(c, st){
   var K = mArea*mPrice;                                             add(mName+'镜片', K, fm(mArea)+'㎡×'+mPrice);
   var M = framed ? 0 : st.mobian*I;                                 add('磨边', M, framed?'有框免磨':'周长×'+st.mobian);
   var N = c.corner==='1' ? st.huajiao : 0;                          add('化角', N);
-  var ledRate = c.led==='led120'?st.led120 : c.led==='led180'?st.led180 : c.led==='led240'?st.led240 : c.led==='cob'?st.ledCob : 0;
-  var O = ledRate>0 ? (I-0.12)*ledRate : 0;                         add(LEDNAME[c.led]||'灯带', O, ledRate>0?'(周长-0.12)×'+ledRate:'');
+  var ledRate = c.led==='led60'?st.led60 : c.led==='led120'?st.led120 : c.led==='led180'?st.led180 : c.led==='led240'?st.led240 : c.led==='cob'?st.ledCob : 0;
+  var O = c.led==='led60' ? I*ledRate : (ledRate>0 ? (I-0.12)*ledRate : 0); add(LEDNAME[c.led]||'灯带', O, c.led==='led60'?'周长×'+ledRate:(ledRate>0?'(周长-0.12)×'+ledRate:''));
   var S;
   if(framed){ S = sand ? (I-0.12)*st.paomoKuangYou : I*st.paomoKuangWu; }
   else { S = (sand?(I-0.12):I)*st.paomoWu; }
@@ -257,6 +259,7 @@ function calc(c, st){
     {n:'加喷砂', v: sand?0:T/(1-lr)},
     {n:'加除雾', v: (st.chewu+0.5)/(1-lr)},
     {n:'化角', v:(J+st.huajiao)/(1-lr)},
+    {n:'改60灯', v:(I*st.led60-(I-0.12)*st.led120)/(1-lr)},
     {n:'改180灯', v:(I-0.12)*(st.led180-st.led120)/(1-lr)},
     {n:'改240灯', v:(I-0.12)*(st.led240-st.led120)/(1-lr)},
     {n:'改320COB', v:(I-0.12)*(st.ledCob-st.led120)/(1-lr)}
@@ -290,7 +293,7 @@ function renderRes(){
   var cfgText = (cfg.framed==='1'?'有框':'无框')+'·'+(cfg.sand==='1'?'喷砂':'不喷砂')+'·'+(cfg.mirror==='ag'?'银镜':cfg.mirror==='alp'?'优质铝镜':'铝镜')+'·'+(LEDNAME[cfg.led]||'')+'·'+(SWNAME[cfg.sw]||'');
   var html='';
   html+='<div class="big"><span class="lab">成本合计</span><span class="val">¥'+fm(r.cost)+'</span></div>';
-  html+='<div class="big" style="margin-top:4px"><span class="lab">建议售价（含'+num(cfg.lr)+'%利润）</span><span class="val">¥'+fm(r.price)+'</span></div>';
+  html+='<div class="big" style="margin-top:4px"><span class="lab">建议售价</span><span class="val">¥'+fm(r.price)+'</span></div>';
   html+='<div class="sub">';
   html+='<div><div class="sl">单铝镜价（不含灯带）</div><div class="sv">¥'+fm(r.alOnly)+'</div></div>';
   html+='<div><div class="sl">FOB报价</div><div class="sv">¥'+fm(r.fob)+' / $'+fm(r.fobUsd)+'</div></div>';
@@ -335,6 +338,74 @@ function copyText(txt){
   document.body.appendChild(ta); ta.select();
   try{ document.execCommand('copy'); toast('报价单已复制'); }catch(e){ toast('复制失败，请手动复制'); }
   document.body.removeChild(ta);
+}
+
+/* ================= 报价表（生成Excel，匹配模板格式） ================= */
+function showQuoteSheet(){
+  var r=lastResult; if(!r){ toast('请先完成计算'); return; }
+  var E=num(cfg.w), F=num(cfg.h), G=num(cfg.t), AT=Math.max(num(cfg.at),1);
+  var innerBox = (E+4)+'×'+(F+4)+'×'+(G+1)+' cm';
+  var outerBox = (E+4)+'×'+(F+4)+'×'+((G+1)*AT)+' cm';
+  var desc = '';
+  desc += '尺寸：'+cfg.w+'×'+cfg.h+' cm（厚 '+cfg.t+' cm）\n';
+  desc += '1 安装方式：'+(cfg.framed==='1'?'有框':'无框')+'\n';
+  desc += '2 表面工艺：'+(cfg.sand==='1'?'喷砂':'不喷砂')+'\n';
+  desc += '3 镜片类型：'+(cfg.mirror==='ag'?'银镜':cfg.mirror==='alp'?'优质铝镜':'铝镜')+'\n';
+  desc += '4 定制切割：'+(cfg.cut==='1'?'需要':'不需要')+'\n';
+  desc += '5 灯带：'+(LEDNAME[cfg.led]||'无灯带')+'\n';
+  desc += '6 开关类型：'+(SWNAME[cfg.sw]||'无开关')+'\n';
+  desc += '7 化角：'+(cfg.corner==='1'?'化角':'无')+'\n';
+  desc += '8 除雾：'+(cfg.fog==='1'?'加除雾':'无')+'\n';
+  desc += '9 激光打标：'+(cfg.mark==='1'?'有':'无')+'\n';
+  desc += '10 包装方式：'+(cfg.pack==='5'?'5包1':cfg.pack==='3'?'3包1':'单包');
+  var moq = 50;
+  var qty = moq;
+  var unitPrice = r.price;
+  var total = qty * unitPrice;
+  var descHtml = desc.replace(/\n/g,'<br>');
+
+  var s='<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="UTF-8"><style>';
+  s+='table{border-collapse:collapse;font-family:"Arial","宋体",sans-serif}';
+  s+='td{border:1px solid #000;padding:6px 8px;font-size:14px;vertical-align:middle}';
+  s+='.title{background:#0e7490;color:#fff;font-size:18px;font-weight:bold;text-align:center;padding:14px}';
+  s+='.head{background:#0e7490;color:#fff;font-weight:bold;text-align:center;font-size:13px;white-space:normal}';
+  s+='.img{width:120px;text-align:center}';
+  s+='.desc{width:280px;vertical-align:top;line-height:1.8;font-size:13px;color:#374151;font-weight:bold}';
+  s+='.box{width:120px;text-align:center;color:#374151}';
+  s+='.num{width:80px;text-align:center}';
+  s+='.price{width:110px;text-align:center;color:#0e7490;font-weight:bold}';
+  s+='.total{width:110px;text-align:center;color:#dc2626;font-weight:bold}';
+  s+='</style></head><body><table>';
+  s+='<tr><td class="title" colspan="8">客户名称：'+(cfg.name||'—')+'</td></tr>';
+  s+='<tr>';
+  s+='<td class="head">图片</td>';
+  s+='<td class="head">描述</td>';
+  s+='<td class="head">包装尺寸（内箱）</td>';
+  s+='<td class="head">包装尺寸（外箱）</td>';
+  s+='<td class="head">数量</td>';
+  s+='<td class="head">起订量</td>';
+  s+='<td class="head">大货单价<br>（不含税运）</td>';
+  s+='<td class="head">总价</td>';
+  s+='</tr>';
+  s+='<tr>';
+  s+='<td class="img" rowspan="12"></td>';
+  s+='<td class="desc" rowspan="12">'+descHtml+'</td>';
+  s+='<td class="box" rowspan="12">'+innerBox+'</td>';
+  s+='<td class="box" rowspan="12">'+outerBox+'</td>';
+  s+='<td class="num" rowspan="12">'+qty+'</td>';
+  s+='<td class="num" rowspan="12">'+moq+'</td>';
+  s+='<td class="price" rowspan="12">¥'+fm(unitPrice)+'</td>';
+  s+='<td class="total" rowspan="12">¥'+fm(total)+'</td>';
+  s+='</tr>';
+  for(var i=0;i<11;i++){ s+='<tr></tr>'; }
+  s+='</table></body></html>';
+  var blob = new Blob(['\ufeff'+s], {type:'application/vnd.ms-excel'});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href=url; a.download='智能镜报价表（'+(cfg.name||'未命名')+'）.xls';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  toast('报价表已生成');
 }
 
 /* ================= 记录 ================= */
@@ -410,6 +481,7 @@ function init(){
   });
   $('dtoggle').onclick=function(){ detailOpen=!detailOpen; $('detailbox').className=detailOpen?'detail':'detail hide'; this.innerHTML=(detailOpen?'▲ 收起成本明细':'▼ 展开成本明细'); };
   $('btnsave').onclick=saveRec;
+  $('btnquote').onclick=showQuoteSheet;
   $('btncopy').onclick=function(){ var t=quoteText(); if(t) copyText(t); };
   $('btnsetsave').onclick=saveSet;
   $('btnreset').onclick=function(){ if(confirm('确定恢复全部默认价格？')){ settings=deepCopy(DEF); save('znj_settings_v1',settings); renderSet(); go(); toast('已恢复默认'); } };
@@ -418,7 +490,7 @@ function init(){
     var el=e.target; if(!el.getAttribute) return;
     var ld=el.getAttribute('data-ld'), dl=el.getAttribute('data-dl');
     if(ld){ var recs=load('znj_records_v1',[]);
-      for(var i=0;i<recs.length;i++){ if(String(recs[i].id)===String(ld)){ cfg=deepCopy(recs[i].cfg); save('znj_cfg_v1',cfg);
+      for(var i=0;i<recs.length;i++){ if(String(recs[i].id)===String(ld)){ cfg=deepCopy(recs[i].cfg); cfg.lr='15'; save('znj_cfg_v1',cfg);
         $('c_name').value=cfg.name||''; $('c_note').value=cfg.note||'';
         $('c_w').value=cfg.w; $('c_h').value=cfg.h; $('c_t').value=cfg.t; $('c_lr').value=cfg.lr; $('c_at').value=cfg.at;
         $('c_fr').value=cfg.fr; $('c_fs').value=cfg.fs; $('c_fm').value=cfg.fm;
