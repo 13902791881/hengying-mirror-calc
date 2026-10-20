@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>定制智能镜报价器</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:#eef1f5;color:#1f2937;font-size:15px;padding-bottom:70px}
+.wrap{max-width:520px;margin:0 auto;padding:0 12px}
+header{background:linear-gradient(135deg,#0f766e,#0e7490);color:#fff;padding:18px 16px 14px}
+header h1{font-size:19px;font-weight:700;letter-spacing:1px}
+header p{font-size:12px;opacity:.85;margin-top:3px}
+.card{background:#fff;border-radius:12px;margin-top:12px;padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.card h2{font-size:14px;color:#0e7490;font-weight:700;margin-bottom:10px;display:flex;align-items:center}
+.card h2:before{content:"";width:4px;height:14px;background:#0e7490;border-radius:2px;margin-right:7px;display:inline-block}
+.fieldrow{display:flex;gap:10px}
+.field{flex:1;margin-bottom:10px}
+.field label{display:block;font-size:12px;color:#6b7280;margin-bottom:4px}
+.field input{width:100%;border:1px solid #d1d5db;border-radius:8px;padding:9px 10px;font-size:16px;color:#111;outline:none;background:#fafafa}
+.field input:focus{border-color:#0e7490;background:#fff}
+.optgroup{margin-bottom:12px}
+.optgroup:last-child{margin-bottom:0}
+.optlabel{font-size:12px;color:#6b7280;margin-bottom:6px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{flex:1;min-width:64px;text-align:center;padding:9px 4px;border-radius:8px;background:#f3f4f6;color:#4b5563;font-size:13px;border:1px solid transparent;cursor:pointer;user-select:none}
+.chip.on{background:#e0f2f1;border-color:#0e7490;color:#0e7490;font-weight:700}
+.res{background:linear-gradient(135deg,#0f766e,#0e7490);border-radius:12px;margin-top:12px;padding:16px;color:#fff}
+.res .big{display:flex;justify-content:space-between;align-items:baseline}
+.res .big .lab{font-size:13px;opacity:.9}
+.res .big .val{font-size:30px;font-weight:800}
+.res .sub{display:flex;flex-wrap:wrap;margin-top:10px;border-top:1px solid rgba(255,255,255,.25);padding-top:10px}
+.res .sub div{width:50%;margin-bottom:8px}
+.res .sub .sl{font-size:11px;opacity:.8}
+.res .sub .sv{font-size:16px;font-weight:700}
+.delta{margin-top:10px;background:rgba(255,255,255,.12);border-radius:8px;padding:8px 10px;font-size:12px;line-height:1.9}
+.btns{display:flex;gap:10px;margin-top:12px}
+.btn{flex:1;border:0;border-radius:9px;padding:12px 0;font-size:15px;font-weight:700;cursor:pointer}
+.btn.pri{background:#0e7490;color:#fff}
+.btn.sec{background:#fff;color:#0e7490;border:1px solid #0e7490}
+.detail{margin-top:10px}
+.detail-toggle{font-size:13px;color:#0e7490;font-weight:700;cursor:pointer;padding:6px 0}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:6px 4px;border-bottom:1px solid #f0f0f0;text-align:left}
+td.v,th.v{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+td.n{color:#6b7280;font-size:11px}
+tr.total td{font-weight:800;color:#0e7490;border-top:2px solid #0e7490}
+.recitem{border-bottom:1px solid #f0f0f0;padding:10px 2px}
+.recitem .rt{display:flex;justify-content:space-between}
+.recitem .rn{font-weight:700}
+.recitem .rd{font-size:12px;color:#6b7280;margin-top:2px}
+.recitem .rp{font-size:12px;color:#0e7490;font-weight:700;margin-top:2px}
+.recitem .ra{display:flex;gap:14px;margin-top:6px;font-size:12px}
+.recitem .ra span{color:#0e7490;cursor:pointer;font-weight:700}
+.recitem .ra span.del{color:#dc2626}
+.empty{text-align:center;color:#9ca3af;padding:40px 0;font-size:13px}
+.setgrid .field input{padding:7px 8px;font-size:14px}
+nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid #e5e7eb;display:flex;z-index:50}
+nav div{flex:1;text-align:center;padding:10px 0 12px;font-size:12px;color:#6b7280;cursor:pointer}
+nav div.on{color:#0e7490;font-weight:700}
+nav .ico{font-size:18px;display:block;margin-bottom:1px}
+#toast{position:fixed;left:50%;top:45%;transform:translateX(-50%);background:rgba(15,23,42,.85);color:#fff;padding:10px 18px;border-radius:8px;font-size:14px;display:none;z-index:99}
+.tip{font-size:11px;color:#9ca3af;margin-top:6px;line-height:1.6}
+.hide{display:none}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap" style="padding:0">
+    <h1>定制智能镜 · 报价器</h1>
+    <p>依据《智能镜成本核算 20260706》规则计算</p>
+  </div>
+</header>
+
+<div class="wrap">
+<!-- ============ 计算器 ============ -->
+<div id="tab-calc">
+  <div class="card">
+    <h2>客户信息</h2>
+    <div class="fieldrow">
+      <div class="field"><label>客户名称</label><input id="c_name" placeholder="选填"></div>
+      <div class="field"><label>备注</label><input id="c_note" placeholder="选填"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>基本尺寸</h2>
+    <div class="fieldrow">
+      <div class="field"><label>宽 (cm)</label><input id="c_w" type="number" inputmode="decimal" value="60"></div>
+      <div class="field"><label>高 (cm)</label><input id="c_h" type="number" inputmode="decimal" value="120"></div>
+      <div class="field"><label>厚度 (cm)</label><input id="c_t" type="number" inputmode="decimal" step="0.1" value="2.8"></div>
+    </div>
+    <div class="fieldrow">
+      <div class="field"><label>利润率 (%)</label><input id="c_lr" type="number" inputmode="decimal" step="0.5" value="10"></div>
+      <div class="field"><label>每箱数量 (片)</label><input id="c_at" type="number" inputmode="numeric" value="5"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>规格选择</h2>
+    <div id="optarea"></div>
+  </div>
+
+  <div class="card" id="framecard">
+    <h2>外框配置</h2>
+    <div class="optgroup"><div class="optlabel">框型(点击自动填入单价，可手动修改)</div>
+      <div class="chips" id="framepresets"></div></div>
+    <div class="fieldrow">
+      <div class="field"><label>框单价 (元/米，按周长计)</label><input id="c_fr" type="number" inputmode="decimal" step="0.5" value="4"></div>
+      <div class="field"><label>框运费 (元)</label><input id="c_fs" type="number" inputmode="decimal" step="0.5" value="0"></div>
+    </div>
+    <div class="field"><label>外框总价手动覆盖 (元，填0则按周长×单价)</label><input id="c_fm" type="number" inputmode="decimal" step="0.5" value="0"></div>
+    <div class="tip">参考：宾生黑框约4元/米，拼接框约17元/米，百年/锦之星约20元/米，厚框不锈钢更高，以实际采购价为准。</div>
+  </div>
+
+  <div class="res" id="resbox"></div>
+  <div class="card">
+    <div class="detail-toggle" id="dtoggle">▼ 展开成本明细</div>
+    <div id="detailbox" class="hide"></div>
+  </div>
+  <div class="btns" style="margin-bottom:14px">
+    <button class="btn sec" id="btncopy">复制报价单</button>
+    <button class="btn pri" id="btnsave">保存报价</button>
+  </div>
+</div>
+
+<!-- ============ 记录 ============ -->
+<div id="tab-rec" class="hide">
+  <div class="card" id="reclist"></div>
+</div>
+
+<!-- ============ 设置 ============ -->
+<div id="tab-set" class="hide">
+  <div id="setarea"></div>
+  <div class="btns" style="margin-bottom:14px">
+    <button class="btn sec" id="btnreset">恢复默认价格</button>
+    <button class="btn pri" id="btnsetsave">保存设置</button>
+  </div>
+  <div class="card"><div class="tip">所有单价均提取自成本核算表，可按采购价变动随时修改。修改后请点击「保存设置」。尺寸成本规则：面积=宽×高/10000；周长=(宽+高)/100×2；报价=成本合计÷(1-利润率)；FOB=报价+整柜海运费÷每柜片数。</div></div>
+</div>
+</div>
+
+<nav>
+  <div data-tab="calc" class="on"><span class="ico">🧮</span>计算器</div>
+  <div data-tab="rec"><span class="ico">📋</span>报价记录</div>
+  <div data-tab="set"><span class="ico">⚙️</span>价格设置</div>
+</nav>
+<div id="toast"></div>
+
+<script>
+/* ================= 默认价格参数（源自成本核算表） ================= */
+var DEF = {
+  jg:0.5, mirrorAl:20.5, mirrorAlPlus:22, mirrorSilver:42, mobian:0.35, huajiao:1,
+  led120:0.9, led180:1.2, led240:1.5, ledCob:2.4,
+  paomoKuangYou:0.45, paomoKuangWu:0.68, paomoWu:0.25,
+  pensha:7, dabiao:0.25, fengbian:0.2, yixian:0.8, sujiao:1, jiaojiao:1,
+  luosi:0.14, gongqianXiao:4, gongqianDa:5, guakouKuang:0.5, guakouWu:1,
+  zhenzhu:0.5, dabaodai:0.5,
+  xiangNei:5, xiangNeiDan:14, xiangWai:2.2, xiangWai3:3.67, xiangWaiDan:8.5,
+  chewu:1.2, fentTi:6.5, pimoDanjia:123,
+  sw_dan:5.2, sw_dan8:8.3, sw_shuang:8.8, sw_san:10.5, sw_leida:14.5,
+  huilv:6.77, haiyun:7500, jzx:68
+};
+var SETDEF_LABELS = [
+  ['镜片与加工', [['jg','玻璃加工费(定制切割)'],['mirrorAl','铝镜单价 元/㎡'],['mirrorAlPlus','优质铝镜 元/㎡'],['mirrorSilver','银镜单价 元/㎡'],['mobian','磨边 元/米'],['huajiao','化角 元']]],
+  ['灯带单价 元/米', [['led120','120灯带'],['led180','180灯带'],['led240','240灯带'],['ledCob','COB灯带']]],
+  ['辅料单价', [['paomoKuangYou','泡沫条·有框喷砂 元/米'],['paomoKuangWu','泡沫条·有框不喷砂 元/米'],['paomoWu','泡沫条·无框 元/米'],['pensha','喷砂 元/㎡'],['dabiao','打标 元'],['fengbian','封边油(无框) 元/米'],['yixian','一分二线 元'],['sujiao','热熔玻璃胶 元'],['jiaojiao','外框打胶工费 元'],['luosi','螺丝 元'],['gongqianXiao','工钱·边长<100 元'],['gongqianDa','工钱·边长≥100 元'],['guakouKuang','挂钩·有框 元'],['guakouWu','挂钩·无框 元'],['zhenzhu','珍珠棉(无框) 元'],['dabaodai','打包带 元']]],
+  ['包装系数', [['xiangNei','内箱 元/㎡(5包1/3包1)'],['xiangNeiDan','内箱 元/㎡(单包)'],['xiangWai','外箱 元/㎡(5包1)'],['xiangWai3','外箱 元/㎡(3包1)'],['xiangWaiDan','外箱 元/㎡(单包)'],['chewu','除雾膜 元'],['fentTi','分体电源(三键) 元'],['pimoDanjia','泡沫单价 元/m³']]],
+  ['开关成本', [['sw_dan','单开三色'],['sw_dan8','单开'],['sw_shuang','双开'],['sw_san','三键'],['sw_leida','双键雷达']]],
+  ['FOB参数', [['huilv','美元汇率'],['haiyun','整柜海运费 元'],['jzx','柜容积 CBM']]]
+];
+var GROUPS = [
+  {key:'framed', label:'安装方式', opts:[['1','有框'],['0','无框']]},
+  {key:'sand', label:'表面工艺', opts:[['0','不喷砂'],['1','喷砂']]},
+  {key:'mirror', label:'镜片类型', opts:[['al','铝镜'],['alp','优质铝镜'],['ag','银镜']]},
+  {key:'cut', label:'定制切割', opts:[['1','需要'],['0','不需要']]},
+  {key:'led', label:'灯带', opts:[['none','无'],['led120','120灯'],['led180','180灯'],['led240','240灯'],['cob','COB']]},
+  {key:'sw', label:'开关类型', opts:[['none','无'],['dan','单开三色'],['dan8','单开'],['shuang','双开'],['san','三键'],['leida','双键雷达']]},
+  {key:'corner', label:'化角', opts:[['0','无'],['1','化角']]},
+  {key:'fog', label:'除雾', opts:[['0','无'],['1','加除雾']]},
+  {key:'mark', label:'激光打标', opts:[['0','无'],['1','有']]},
+  {key:'pack', label:'包装方式', opts:[['5','5包1'],['3','3包1'],['1','单包']]}
+];
+var FRAMES = [['宾生黑框',4],['拼接框',17],['百年',20],['锦之星',21],['自定义',null]];
+var LEDNAME = {led120:'120灯带', led180:'180灯带', led240:'240灯带', cob:'COB灯带', none:'无灯带'};
+var SWNAME = {dan:'单开三色', dan8:'单开', shuang:'双开', san:'三键', leida:'双键雷达', none:'无开关'};
+
+/* ================= 状态 ================= */
+var settings = load('znj_settings_v1', DEF);
+var cfg = load('znj_cfg_v1', {w:'60',h:'120',t:'2.8',lr:'10',at:'5',framed:'1',sand:'1',mirror:'al',cut:'1',led:'led120',sw:'dan',corner:'0',fog:'0',mark:'0',pack:'5',fr:'4',fs:'0',fm:'0',name:'',note:''});
+var lastResult = null, detailOpen = false;
+
+function load(k, d){ try{ var s = localStorage.getItem(k); if(!s) return deepCopy(d); var v = JSON.parse(s); for(var p in d){ if(v[p]===undefined) v[p]=d[p]; } return v; }catch(e){ return deepCopy(d); } }
+function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
+function save(k, v){ try{ localStorage.setItem(k, JSON.stringify(v)); }catch(e){} }
+function num(v){ var n = parseFloat(v); return isNaN(n)?0:n; }
+function fm(n){ return (Math.round(n*100)/100).toFixed(2); }
+function $(id){ return document.getElementById(id); }
+function toast(msg){ var t=$('toast'); t.innerHTML=msg; t.style.display='block'; clearTimeout(t._h); t._h=setTimeout(function(){ t.style.display='none'; },1800); }
+
+/* ================= 计算引擎（与Excel公式一一对应） ================= */
+function foamDensity(g){ if(g<4) return 0.06; if(g<10) return 0.09; if(g<12) return 0.12; return 0.17; }
+
+function calc(c, st){
+  var E=num(c.w), F=num(c.h), G=num(c.t);
+  var framed = c.framed==='1', sand = c.sand==='1', cut = c.cut==='1';
+  var H = E*F/10000;
+  var I = (E+F)/100*2;
+  var it = [];
+  function add(n,v,note){ it.push({n:n,v:v,note:note||''}); }
+
+  var J = cut ? st.jg : 0;                                          add('玻璃加工费', J, cut?'定制切割':'');
+  var mPrice = c.mirror==='ag'?st.mirrorSilver : c.mirror==='alp'?st.mirrorAlPlus : st.mirrorAl;
+  var mName = c.mirror==='ag'?'银镜' : c.mirror==='alp'?'优质铝镜' : '铝镜';
+  var mArea = cut ? (E+2)*(F+2)/10000 : H;
+  var K = mArea*mPrice;                                             add(mName+'镜片', K, fm(mArea)+'㎡×'+mPrice);
+  var M = framed ? 0 : st.mobian*I;                                 add('磨边', M, framed?'有框免磨':'周长×'+st.mobian);
+  var N = c.corner==='1' ? st.huajiao : 0;                          add('化角', N);
+  var ledRate = c.led==='led120'?st.led120 : c.led==='led180'?st.led180 : c.led==='led240'?st.led240 : c.led==='cob'?st.ledCob : 0;
+  var O = ledRate>0 ? (I-0.12)*ledRate : 0;                         add(LEDNAME[c.led]||'灯带', O, ledRate>0?'(周长-0.12)×'+ledRate:'');
+  var S;
+  if(framed){ S = sand ? (I-0.12)*st.paomoKuangYou : I*st.paomoKuangWu; }
+  else { S = (sand?(I-0.12):I)*st.paomoWu; }
+  add('泡沫条', S, framed?(sand?'(周长-0.12)×'+st.paomoKuangYou:'周长×'+st.paomoKuangWu):(sand?'(周长-0.12)×':'周长×')+st.paomoWu);
+  var T = sand ? H*st.pensha : 0;                                   add('喷砂', T, sand?fm(H)+'㎡×'+st.pensha:'');
+  var U = c.mark==='1' ? st.dabiao : 0;                             add('打标', U);
+  var V = framed ? 0 : st.fengbian*I;                               add('封边油', V, framed?'':'周长×'+st.fengbian);
+  var W = I>=3 ? st.yixian : 0;                                     add('一分二线', W, I>=3?'':'周长<3免');
+  var X = st.sujiao;                                                add('热熔玻璃胶', X);
+  var Y = framed ? st.jiaojiao : 0;                                 add('外框打胶工费', Y);
+  var Z = c.fog==='1' ? st.chewu : 0;                               add('除雾膜', Z);
+  var AA = st.luosi;                                                add('螺丝', AA);
+  var AB = (E>=100||F>=100) ? st.gongqianDa : st.gongqianXiao;      add('工钱', AB, (E>=100||F>=100)?'边长≥100':'');
+  var swCost = c.sw==='none'?0:num(st['sw_'+c.sw]);                 add('开关('+(SWNAME[c.sw]||'')+')', swCost);
+  var AE = c.sw==='san' ? st.fentTi : 0;                            add('分体电源', AE, c.sw==='san'?'三键标配':'');
+  var AF = framed ? st.guakouKuang : st.guakouWu;                   add('挂钩', AF);
+  var AH = H*(c.pack==='1'?st.xiangNeiDan:st.xiangNei);             add('纸箱(内)', AH, fm(H)+'㎡×'+(c.pack==='1'?st.xiangNeiDan:st.xiangNei));
+  var AI = H*(c.pack==='1'?st.xiangWaiDan:(c.pack==='3'?st.xiangWai3:st.xiangWai)); add('纸箱(外)', AI, '');
+  var AJ = st.dabaodai;                                             add('打包带', AJ);
+  var AM = c.pack==='1' ? (E+6)*(F+6)/10000*foamDensity(G)*st.pimoDanjia : 0; add('珍珠棉泡沫(单包)', AM, c.pack==='1'?'加6cm泡径×'+foamDensity(G)+'密度':'');
+  var AN = framed ? 0 : st.zhenzhu;                                 add('小U珍珠棉', AN, framed?'':'无框');
+  var AO = framed ? (num(c.fm)>0 ? num(c.fm) : I*num(c.fr)) : 0;    add('外框', AO, framed?(num(c.fm)>0?'手动填入':'周长'+fm(I)+'m×'+num(c.fr)):'');
+  var AP = framed ? num(c.fs) : 0;                                  add('框运费', AP);
+
+  var cost=0; for(var i=0;i<it.length;i++){ cost+=it[i].v; }
+  var lr = Math.min(Math.max(num(c.lr),0),90)/100;
+  var price = cost/(1-lr);
+  var alOnly = (K+M+Y+AA+AB+AF+AH+AI+AO)/(1-lr);
+  var AT = Math.max(num(c.at),1);
+  var cbm = (E+4)*(F+4)*(G+1)*AT/1000000;
+  var pcs = st.jzx/cbm*AT;
+  var freight = st.haiyun/pcs;
+  var fob = price+freight;
+  var fobUsd = Math.round(fob/st.huilv*100)/100;
+  var silverK = mArea*st.mirrorSilver;
+  var deltas = [
+    {n:'改银镜', v:(silverK-K)/(1-lr)},
+    {n:'加喷砂', v: sand?0:T/(1-lr)},
+    {n:'加除雾', v: (st.chewu+0.5)/(1-lr)},
+    {n:'化角', v:(J+st.huajiao)/(1-lr)},
+    {n:'改180灯', v:(I-0.12)*(st.led180-st.led120)/(1-lr)},
+    {n:'改240灯', v:(I-0.12)*(st.led240-st.led120)/(1-lr)},
+    {n:'改320COB', v:(I-0.12)*(st.ledCob-st.led120)/(1-lr)}
+  ];
+  return {items:it, cost:cost, price:price, alOnly:alOnly, cbm:cbm, pcs:pcs, freight:freight, fob:fob, fobUsd:fobUsd, deltas:deltas, H:H, I:I};
+}
+
+/* ================= 渲染 ================= */
+function renderOpts(){
+  var html='';
+  for(var i=0;i<GROUPS.length;i++){
+    var g=GROUPS[i];
+    html+='<div class="optgroup"><div class="optlabel">'+g.label+'</div><div class="chips" data-g="'+g.key+'">';
+    for(var j=0;j<g.opts.length;j++){
+      var o=g.opts[j];
+      html+='<div class="chip'+(cfg[g.key]===o[0]?' on':'')+'" data-v="'+o[0]+'">'+o[1]+'</div>';
+    }
+    html+='</div></div>';
+  }
+  $('optarea').innerHTML=html;
+  var fh='';
+  for(var k=0;k<FRAMES.length;k++){ fh+='<div class="chip" data-fv="'+(FRAMES[k][1]===null?'':FRAMES[k][1])+'">'+FRAMES[k][0]+'</div>'; }
+  $('framepresets').innerHTML=fh;
+}
+function bindInput(id,key){ $(id).oninput=function(){ cfg[key]=this.value; if(key==='pack'){ autoAT(); } go(); }; $(id).onchange=function(){ cfg[key]=this.value; go(); }; }
+function autoAT(){ $('c_at').value = cfg.pack==='1'?'1':(cfg.pack==='3'?'3':'5'); cfg.at=$('c_at').value; }
+
+function renderRes(){
+  var r = calc(cfg, settings);
+  lastResult = r;
+  var cfgText = (cfg.framed==='1'?'有框':'无框')+'·'+(cfg.sand==='1'?'喷砂':'不喷砂')+'·'+(cfg.mirror==='ag'?'银镜':cfg.mirror==='alp'?'优质铝镜':'铝镜')+'·'+(LEDNAME[cfg.led]||'')+'·'+(SWNAME[cfg.sw]||'');
+  var html='';
+  html+='<div class="big"><span class="lab">成本合计</span><span class="val">¥'+fm(r.cost)+'</span></div>';
+  html+='<div class="big" style="margin-top:4px"><span class="lab">建议售价（含'+num(cfg.lr)+'%利润）</span><span class="val">¥'+fm(r.price)+'</span></div>';
+  html+='<div class="sub">';
+  html+='<div><div class="sl">单铝镜价（不含灯带）</div><div class="sv">¥'+fm(r.alOnly)+'</div></div>';
+  html+='<div><div class="sl">FOB报价</div><div class="sv">¥'+fm(r.fob)+' / $'+fm(r.fobUsd)+'</div></div>';
+  html+='<div><div class="sl">面积 '+fm(r.H)+'㎡ · 周长 '+fm(r.I)+'m</div><div class="sv" style="font-size:12px;font-weight:400">'+cfgText+'</div></div>';
+  html+='<div><div class="sl">箱规 '+r.cbm.toFixed(4)+'CBM · 每柜'+Math.floor(r.pcs)+'片</div><div class="sv" style="font-size:12px;font-weight:400">海运费 ¥'+fm(r.freight)+'/片</div></div>';
+  html+='</div>';
+  html+='<div class="delta"><b>选配加价参考（含利润）：</b><br>';
+  for(var i=0;i<r.deltas.length;i++){ var d=r.deltas[i]; if(d.v>0.005){ html+=d.n+' <b>+'+fm(d.v)+'</b>&nbsp;&nbsp;'; } }
+  html+='</div>';
+  $('resbox').innerHTML=html;
+
+  var dh='<table><tr><th>成本项目</th><th class="v">金额(元)</th><th class="v">计算说明</th></tr>';
+  for(var j=0;j<r.items.length;j++){ var t=r.items[j];
+    dh+='<tr><td>'+t.n+'</td><td class="v">'+fm(t.v)+'</td><td class="n">'+t.note+'</td></tr>'; }
+  dh+='<tr class="total"><td>成本合计</td><td class="v">'+fm(r.cost)+'</td><td class="n">÷(1-'+num(cfg.lr)+'%)=售价'+fm(r.price)+'</td></tr></table>';
+  $('detailbox').innerHTML=dh;
+}
+function go(){ save('znj_cfg_v1', cfg); $('framecard').className = cfg.framed==='1'?'card':'card hide'; renderRes(); }
+
+/* ================= 报价文本 ================= */
+function quoteText(){
+  var r=lastResult; if(!r) return '';
+  var t='【定制智能镜报价】\n';
+  if(cfg.name) t+='客户：'+cfg.name+'\n';
+  t+='尺寸：'+cfg.w+'×'+cfg.h+'cm（厚'+cfg.t+'）\n';
+  t+='配置：'+(cfg.framed==='1'?'有框':'无框')+' | '+(cfg.sand==='1'?'喷砂':'不喷砂')+' | '+(cfg.mirror==='ag'?'银镜':cfg.mirror==='alp'?'优质铝镜':'铝镜')+' | '+(LEDNAME[cfg.led]||'')+' | '+(SWNAME[cfg.sw]||'')+(cfg.fog==='1'?' | 除雾':'')+(cfg.corner==='1'?' | 化角':'')+'\n';
+  t+='包装：'+(cfg.pack==='5'?'5包1':cfg.pack==='3'?'3包1':'单包')+'\n';
+  t+='----------------------\n';
+  t+='成本合计：¥'+fm(r.cost)+'\n';
+  t+='建议售价：¥'+fm(r.price)+'（利润率'+num(cfg.lr)+'%）\n';
+  t+='单铝镜价：¥'+fm(r.alOnly)+'\n';
+  t+='FOB报价：¥'+fm(r.fob)+' / $'+fm(r.fobUsd)+'\n';
+  var ds=[];
+  for(var i=0;i<r.deltas.length;i++){ var d=r.deltas[i]; if(d.v>0.005){ ds.push(d.n+' +'+fm(d.v)); } }
+  if(ds.length) t+='----------------------\n选配加价：'+ds.join(' | ')+'\n';
+  if(cfg.note) t+='备注：'+cfg.note+'\n';
+  return t;
+}
+function copyText(txt){
+  var ta=document.createElement('textarea');
+  ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('报价单已复制'); }catch(e){ toast('复制失败，请手动复制'); }
+  document.body.removeChild(ta);
+}
+
+/* ================= 记录 ================= */
+function saveRec(){
+  var r=lastResult; if(!r){ toast('请先完成计算'); return; }
+  var recs=load('znj_records_v1',[]);
+  recs.unshift({id:Date.now(), ts:new Date().toLocaleString('zh-CN',{hour12:false}),
+    name:cfg.name||'未命名客户', note:cfg.note||'',
+    sum:'¥'+fm(r.price)+' / $'+fm(r.fobUsd),
+    desc:cfg.w+'×'+cfg.h+'cm '+(cfg.framed==='1'?'有框':'无框')+(cfg.sand==='1'?' 喷砂':'')+' '+(LEDNAME[cfg.led]||'')+' '+(SWNAME[cfg.sw]||''),
+    cfg:deepCopy(cfg)});
+  save('znj_records_v1',recs);
+  toast('报价已保存');
+  renderRecs();
+}
+function renderRecs(){
+  var recs=load('znj_records_v1',[]);
+  if(!recs.length){ $('reclist').innerHTML='<div class="empty">暂无报价记录<br><br>在计算器中点击「保存报价」即可留存</div>'; return; }
+  var h='';
+  for(var i=0;i<recs.length;i++){ var r=recs[i];
+    h+='<div class="recitem"><div class="rt"><span class="rn">'+esc(r.name)+'</span><span style="font-size:11px;color:#9ca3af">'+r.ts+'</span></div>';
+    h+='<div class="rd">'+esc(r.desc)+(r.note?' · '+esc(r.note):'')+'</div>';
+    h+='<div class="rp">售价 '+r.sum+'</div>';
+    h+='<div class="ra"><span data-ld="'+r.id+'">载入配置</span><span class="del" data-dl="'+r.id+'">删除</span></div></div>';
+  }
+  $('reclist').innerHTML=h;
+}
+function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* ================= 设置 ================= */
+function renderSet(){
+  var h='';
+  for(var i=0;i<SETDEF_LABELS.length;i++){
+    var g=SETDEF_LABELS[i];
+    h+='<div class="card"><h2>'+g[0]+'</h2><div class="setgrid"><div class="fieldrow">';
+    var fs=g[1];
+    for(var j=0;j<fs.length;j++){
+      h+='<div class="field"><label>'+fs[j][1]+'</label><input type="number" step="any" data-k="'+fs[j][0]+'" value="'+settings[fs[j][0]]+'"></div>';
+      if((j+1)%3===0 && j<fs.length-1){ h+='</div><div class="fieldrow">'; }
+    }
+    h+='</div></div></div>';
+  }
+  $('setarea').innerHTML=h;
+}
+function saveSet(){
+  var inputs=$('setarea').querySelectorAll('input[data-k]');
+  for(var i=0;i<inputs.length;i++){ var k=inputs[i].getAttribute('data-k'); settings[k]=num(inputs[i].value); }
+  save('znj_settings_v1',settings);
+  toast('设置已保存'); go();
+}
+
+/* ================= 事件 ================= */
+function init(){
+  renderOpts(); renderSet(); renderRecs();
+  $('c_name').value=cfg.name||''; $('c_note').value=cfg.note||'';
+  $('c_w').value=cfg.w; $('c_h').value=cfg.h; $('c_t').value=cfg.t; $('c_lr').value=cfg.lr; $('c_at').value=cfg.at;
+  $('c_fr').value=cfg.fr; $('c_fs').value=cfg.fs; $('c_fm').value=cfg.fm;
+  bindInput('c_name','name'); bindInput('c_note','note');
+  bindInput('c_w','w'); bindInput('c_h','h'); bindInput('c_t','t'); bindInput('c_lr','lr'); bindInput('c_at','at');
+  bindInput('c_fr','fr'); bindInput('c_fs','fs'); bindInput('c_fm','fm');
+
+  $('optarea').addEventListener('click', function(e){
+    var el=e.target; if(!el.getAttribute || !el.getAttribute('data-v')) return;
+    var g=el.parentNode.getAttribute('data-g');
+    cfg[g]=el.getAttribute('data-v');
+    if(g==='pack'){ autoAT(); }
+    renderOpts(); go();
+  });
+  $('framepresets').addEventListener('click', function(e){
+    var el=e.target; var fv=el.getAttribute&&el.getAttribute('data-fv');
+    if(fv===null||fv===undefined||fv==='') { if(el.getAttribute('data-fv')==='') toast('请直接在输入框填写单价'); return; }
+    $('c_fr').value=fv; cfg.fr=fv; go();
+  });
+  $('dtoggle').onclick=function(){ detailOpen=!detailOpen; $('detailbox').className=detailOpen?'detail':'detail hide'; this.innerHTML=(detailOpen?'▲ 收起成本明细':'▼ 展开成本明细'); };
+  $('btnsave').onclick=saveRec;
+  $('btncopy').onclick=function(){ var t=quoteText(); if(t) copyText(t); };
+  $('btnsetsave').onclick=saveSet;
+  $('btnreset').onclick=function(){ if(confirm('确定恢复全部默认价格？')){ settings=deepCopy(DEF); save('znj_settings_v1',settings); renderSet(); go(); toast('已恢复默认'); } };
+
+  $('reclist').addEventListener('click', function(e){
+    var el=e.target; if(!el.getAttribute) return;
+    var ld=el.getAttribute('data-ld'), dl=el.getAttribute('data-dl');
+    if(ld){ var recs=load('znj_records_v1',[]);
+      for(var i=0;i<recs.length;i++){ if(String(recs[i].id)===String(ld)){ cfg=deepCopy(recs[i].cfg); save('znj_cfg_v1',cfg);
+        $('c_name').value=cfg.name||''; $('c_note').value=cfg.note||'';
+        $('c_w').value=cfg.w; $('c_h').value=cfg.h; $('c_t').value=cfg.t; $('c_lr').value=cfg.lr; $('c_at').value=cfg.at;
+        $('c_fr').value=cfg.fr; $('c_fs').value=cfg.fs; $('c_fm').value=cfg.fm;
+        renderOpts(); go(); switchTab('calc'); toast('已载入报价配置'); return; } } }
+    if(dl){ if(confirm('删除该条报价记录？')){ var rs=load('znj_records_v1',[]); var out=[];
+      for(var j=0;j<rs.length;j++){ if(String(rs[j].id)!==String(dl)) out.push(rs[j]); }
+      save('znj_records_v1',out); renderRecs(); } }
+  });
+
+  var navs=document.querySelectorAll('nav div');
+  for(var n=0;n<navs.length;n++){ navs[n].onclick=function(){ switchTab(this.getAttribute('data-tab')); }; }
+  go();
+}
+function switchTab(t){
+  $('tab-calc').className=t==='calc'?'':'hide';
+  $('tab-rec').className=t==='rec'?'':'hide';
+  $('tab-set').className=t==='set'?'':'hide';
+  var navs=document.querySelectorAll('nav div');
+  for(var i=0;i<navs.length;i++){ navs[i].className=navs[i].getAttribute('data-tab')===t?'on':''; }
+  if(t==='rec') renderRecs();
+}
+init();
+</script>
+</body>
+</html>
