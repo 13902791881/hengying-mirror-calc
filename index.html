@@ -68,7 +68,6 @@ nav .ico{font-size:18px;display:block;margin-bottom:1px}
 <header>
   <div class="wrap" style="padding:0">
     <h1>定制智能镜 · 报价器</h1>
-    <p>依据《智能镜成本核算 20260706》规则计算</p>
   </div>
 </header>
 
@@ -91,7 +90,7 @@ nav .ico{font-size:18px;display:block;margin-bottom:1px}
       <div class="field"><label>厚度 (cm)</label><input id="c_t" type="number" inputmode="decimal" step="0.1" value="2.8"></div>
     </div>
     <div class="fieldrow">
-      <div class="field"><label>利润率 (%)</label><input id="c_lr" type="number" inputmode="decimal" step="0.5" value="10"></div>
+      <div class="field" style="display:none"><label>利润率 (%)</label><input id="c_lr" type="number" inputmode="decimal" step="0.5" value="15"></div>
       <div class="field"><label>每箱数量 (片)</label><input id="c_at" type="number" inputmode="numeric" value="5"></div>
     </div>
   </div>
@@ -110,7 +109,7 @@ nav .ico{font-size:18px;display:block;margin-bottom:1px}
       <div class="field"><label>框运费 (元)</label><input id="c_fs" type="number" inputmode="decimal" step="0.5" value="0"></div>
     </div>
     <div class="field"><label>外框总价手动覆盖 (元，填0则按周长×单价)</label><input id="c_fm" type="number" inputmode="decimal" step="0.5" value="0"></div>
-    <div class="tip">参考：宾生黑框约4元/米，拼接框约17元/米，百年/锦之星约20元/米，厚框不锈钢更高，以实际采购价为准。</div>
+    <div class="tip">参考：拼接框约4元/米，以实际采购价为准。</div>
   </div>
 
   <div class="res" id="resbox"></div>
@@ -181,13 +180,13 @@ var GROUPS = [
   {key:'mark', label:'激光打标', opts:[['0','无'],['1','有']]},
   {key:'pack', label:'包装方式', opts:[['5','5包1'],['3','3包1'],['1','单包']]}
 ];
-var FRAMES = [['宾生黑框',4],['拼接框',17],['百年',20],['锦之星',21],['自定义',null]];
+var FRAMES = [['拼接框',4],['自定义',null]];
 var LEDNAME = {led120:'120灯带', led180:'180灯带', led240:'240灯带', cob:'COB灯带', none:'无灯带'};
 var SWNAME = {dan:'单开三色', dan8:'单开', shuang:'双开', san:'三键', leida:'双键雷达', none:'无开关'};
 
 /* ================= 状态 ================= */
 var settings = load('znj_settings_v1', DEF);
-var cfg = load('znj_cfg_v1', {w:'60',h:'120',t:'2.8',lr:'10',at:'5',framed:'1',sand:'1',mirror:'al',cut:'1',led:'led120',sw:'dan',corner:'0',fog:'0',mark:'0',pack:'5',fr:'4',fs:'0',fm:'0',name:'',note:''});
+var cfg = load('znj_cfg_v1', {w:'60',h:'120',t:'2.8',lr:'15',at:'5',framed:'1',sand:'1',mirror:'al',cut:'1',led:'led120',sw:'dan',corner:'0',fog:'0',mark:'0',pack:'5',fr:'4',fs:'0',fm:'0',name:'',note:''});
 var lastResult = null, detailOpen = false;
 
 function load(k, d){ try{ var s = localStorage.getItem(k); if(!s) return deepCopy(d); var v = JSON.parse(s); for(var p in d){ if(v[p]===undefined) v[p]=d[p]; } return v; }catch(e){ return deepCopy(d); } }
